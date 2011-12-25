@@ -61,6 +61,14 @@ fi
 # get host from ec2-host command
 host=$(eval "$cmd $inst")
 
+wc=$(echo "$host" | wc -l)
+if [[ $wc -gt 1 ]]; then
+  echo "Several hosts are found by pattern '$inst'. Please be more precise to move on."
+  echo
+  echo $host
+  exit 0
+fi
+
 # pass all other parameters (${@:2}) to ssh allowing
 # things like: ec2-ssh nginx uptime
 cmd="echo \\\". ~/.bashrc && PS1='\[\e]0;$inst: \w\\\a\]\[\\\033[01;32m\]$inst\[\\\033[00m\]:\[\\\033[01;34m\]\w\[\\\033[00m\]\\\$ '\\\" > ~/.ec2sshrc; /bin/bash --rcfile .ec2sshrc -i"

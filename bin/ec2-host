@@ -3,6 +3,7 @@
 import os
 import sys
 import getopt
+import re
 
 from sys import stderr
 
@@ -29,18 +30,16 @@ Prints server host name.
   -t, --tag TAG              Tag name for searching, defaults to 'Name'"""
 
 
-def ec2_active_instances(label_tag, filters):
+def ec2_active_instances(label_tag, pattern):
     instances = []
-    kwargs = {}
 
-    if filters:
-        kwargs['filters'] = filters
+    tag_match = re.compile(pattern)
 
-    reservations = _ec2.get_all_instances(**kwargs)
+    reservations = _ec2.get_all_instances()
     for reservation in reservations:
         for instance in reservation.instances:
             instance_name = instance.tags.get(label_tag)
-            if instance.public_dns_name:
+            if instance.public_dns_name and tag_match.search(instance_name):
                 pair = (instance_name, instance.public_dns_name)
                 instances.append(pair)
     return instances
@@ -96,15 +95,12 @@ def main(argv):
 
     argc = len(args)
 
-    filters = {}
-    if argc == 1:
-        filters['tag:%s' % tag] = args[0]
-    elif argc > 1:
+    if argc > 1:
         print >>stderr, "Warning: more than one name given"
         sys.exit(1)
         return
 
-    instances = ec2_active_instances(tag, filters)
+    instances = ec2_active_instances(tag, args[0])
 
     numinstances = len(instances)
 
