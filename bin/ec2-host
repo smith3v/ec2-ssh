@@ -39,6 +39,8 @@ def ec2_active_instances(label_tag, pattern):
     for reservation in reservations:
         for instance in reservation.instances:
             instance_name = instance.tags.get(label_tag)
+            if not instance_name:
+                continue
             if instance.public_dns_name and tag_match.search(instance_name):
                 pair = (instance_name, instance.public_dns_name)
                 instances.append(pair)
